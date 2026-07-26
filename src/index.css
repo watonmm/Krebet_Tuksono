@@ -1,0 +1,49 @@
+@import 'tailwindcss';
+
+@theme {
+  /* ── Light Blue palette ── */
+  --color-leaf-50: #f0f9ff;
+  --color-leaf-100: #e0f2fe;
+  --color-leaf-200: #bae6fd;
+  --color-leaf-300: #7dd3fc;
+  --color-leaf-400: #38bdf8;
+  --color-leaf-500: #0ea5e9;
+  --color-leaf-600: #0284c7;
+  --color-leaf-700: #0369a1;
+  --color-leaf-800: #075985;
+  --color-leaf-900: #0c4a6e;
+  --color-leaf-950: #082f49;
+
+  /* ── Wood / Brown accent ── */
+  --color-wood-50: #fdf8f0;
+  --color-wood-100: #f5f0eb;
+  --color-wood-200: #e8ddd0;
+  --color-wood-300: #d4c4ab;
+  --color-wood-400: #b8a07a;
+  --color-wood-500: #8b6f47;
+  --color-wood-600: #7a5f3a;
+  --color-wood-700: #6b4f2e;
+  --color-wood-800: #5a4226;
+  --color-wood-900: #4a3620;
+
+  /* ── Warm neutrals (backgrounds) ── */
+  --color-warm-50: #faf9f6;
+  --color-warm-100: #f4f2ed;
+  --color-warm-200: #eae7e0;
+
+  /* ── Typography ── */
+  --font-sans: 'Poppins', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--color-warm-50);
+  }
+  ::selection {
+    background-color: var(--color-leaf-200);
+    color: var(--color-leaf-900);
+  }
+}
