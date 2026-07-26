@@ -118,6 +118,58 @@ export const siteConfig = {
     },
   ],
 
+  /* ─── Fasilitas Umum ─── */
+  facilities: [
+    {
+      id: 1,
+      name: 'Balai Dusun Krebet',
+      type: 'Balai Desa',
+      description:
+        'Tempat pertemuan warga, kegiatan gotong royong, dan pelatihan masyarakat.',
+      address: 'Jl. Krebet No. 1, Dusun Krebet',
+      phone: '6281234567801',
+      gmaps: null,
+      image: null,
+    },
+    {
+      id: 2,
+      name: 'Posyandu Melati',
+      type: 'Posyandu',
+      description:
+        'Layanan kesehatan ibu dan anak, imunisasi, serta penyuluhan gizi.',
+      address: 'Jl. Krebet Raya, Dusun Krebet',
+      phone: '6281234567802',
+      gmaps: null,
+      image: null,
+    },
+  ],
+
+  /* ─── Kebudayaan & Kesenian ─── */
+  culture: [
+    {
+      id: 1,
+      name: 'Sanggar Tari Oglek Krebet',
+      type: 'Sanggar Seni',
+      description:
+        'Komunitas pelestarian tari tradisional Krebet dan pertunjukan kesenian lokal.',
+      address: 'Dusun Krebet',
+      phone: '6281234567803',
+      gmaps: null,
+      image: null,
+    },
+    {
+      id: 2,
+      name: 'Festival Baritan Suran',
+      type: 'Kesenian Tradisional',
+      description:
+        'Acara budaya tahunan yang menampilkan musik tradisional dan pertunjukan seni rakyat.',
+      address: 'Lapangan Krebet',
+      phone: '',
+      gmaps: null,
+      image: null,
+    },
+  ],
+
   /* ─── Perangkat / Pimpinan ─── */
   leadership: [
     {

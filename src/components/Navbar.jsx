@@ -5,6 +5,7 @@ const navLinks = [
   { label: 'Tentang', href: '#tentang' },
   { label: 'Demografi', href: '#demografi' },
   { label: 'Fasilitas', href: '#fasilitas' },
+  { label: 'Kebudayaan', href: '#kebudayaan' },
   { label: 'UMKM', href: '#umkm' },
   { label: 'Peta', href: '#peta' },
   { label: 'Alamat', href: '#alamat' },

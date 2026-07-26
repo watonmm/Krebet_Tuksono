@@ -3,6 +3,7 @@ import Hero from './components/Hero';
 import About from './components/About';
 import Stats from './components/Stats';
 import Facilities from './components/Facilities';
+import Culture from './components/Culture';
 import UMKMDirectory from './components/UMKMDirectory';
 import MapSection from './components/MapSection';
 import Footer from './components/Footer';
@@ -16,6 +17,7 @@ function App() {
         <About />
         <Stats />
         <Facilities />
+        <Culture />
         <UMKMDirectory />
         <MapSection />
       </main>

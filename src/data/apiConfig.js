@@ -30,9 +30,10 @@ const SPREADSHEET_ID = '1E7SBfDyWBZ6RXDo7rESduNuWayhB2NFKHGSoEN8qkSM';
 // │  Sesuaikan dengan nama tab yang ada di spreadsheet Anda.  │
 // │  Untuk dusun lain, cukup ganti nama sheet-nya saja.       │
 // └───────────────────────────────────────────────────────────┘
-const SHEET_UMKM = 'UMKM Krebet';
+const SHEET_UMKM = 'Potensi Krebet';
 const SHEET_STATS = 'Statistik Krebet';
 const SHEET_FACILITIES = 'Fasilitas Umum Krebet';
+const SHEET_CULTURE = 'Kebudayaan Krebet';
 
 /**
  * Membangun URL Google Sheets gviz/tq untuk mengambil data
@@ -62,4 +63,9 @@ export const API_CONFIG = {
    * URL untuk data fasilitas umum (Tab: Fasilitas Umum Krebet).
    */
   facilities: isConfigured ? buildGoogleSheetsUrl(SHEET_FACILITIES) : null,
+
+  /**
+   * URL untuk data kebudayaan dan kesenian.
+   */
+  culture: isConfigured ? buildGoogleSheetsUrl(SHEET_CULTURE) : null,
 };

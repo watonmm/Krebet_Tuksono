@@ -95,13 +95,23 @@ function DetailModal({ item, onClose }) {
         {/* Image */}
         <div className="relative h-56 sm:h-64 bg-warm-100 flex items-center justify-center overflow-hidden rounded-t-xl">
           {item.image ? (
-            <img
-              src={item.image}
-              alt={item.name}
-              className="w-full h-full object-cover"
-              loading="lazy"
-              decoding="async"
-            />
+            <>
+              <img
+                src={item.image}
+                alt={item.name}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+                referrerPolicy="no-referrer"
+                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = 'flex'); }}
+              />
+              <div className="hidden flex-col items-center gap-2">
+                <svg className="w-12 h-12 text-warm-200" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.41a2.25 2.25 0 013.182 0l2.909 2.91m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
+                <span className="text-xs text-warm-200">Foto tidak tersedia</span>
+              </div>
+            </>
           ) : (
             <div className="flex flex-col items-center gap-2">
               <svg className="w-12 h-12 text-warm-200" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
@@ -259,7 +269,7 @@ export default function UMKMDirectory() {
               ? Array.from({ length: 6 }).map((_, i) => (
                   <UMKMSkeleton key={i} />
                 ))
-              : umkm.map((item) => (
+              : filteredItems.map((item) => (
                   <article
                     key={item.id}
                     className="group bg-white rounded-lg border border-warm-200 overflow-hidden hover:shadow-md transition-shadow duration-200 flex flex-col cursor-pointer"
@@ -274,6 +284,8 @@ export default function UMKMDirectory() {
                           className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
                           loading="lazy"
                           decoding="async"
+                          referrerPolicy="no-referrer"
+                          onError={(e) => { e.target.style.display = 'none'; }}
                         />
                       ) : (
                         <ImagePlaceholder />

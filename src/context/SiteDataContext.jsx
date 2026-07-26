@@ -161,14 +161,18 @@ function toDirectImageUrl(url) {
 function mapUmkmRow(row, index) {
   const rawImage = row['Foto'] || row['foto'] || null;
 
+  // Normalisasi WhatsApp: hapus karakter non-digit kecuali + di awal
+  let rawWa = String(row['WhatsApp'] || row['whatsapp'] || '');
+  if (rawWa === '-' || rawWa.trim() === '') rawWa = '';
+
   return {
     id: index + 1,
     name: row['Nama'] || row['nama'] || '',
     description: row['Deskripsi'] || row['deskripsi'] || '',
     image: toDirectImageUrl(rawImage),
     qris: String(row['QRIS'] || row['qris'] || '').toLowerCase() === 'ya',
-    whatsapp: String(row['WhatsApp'] || row['whatsapp'] || ''),
-    category: row['Kategori'] || row['kategori'] || 'Lainnya',
+    whatsapp: rawWa,
+    category: (row['Kategori'] || row['kategori'] || 'Lainnya').trim(),
     gmaps: row['Gmaps'] || row['gmaps'] || null,
   };
 }
@@ -179,13 +183,40 @@ function mapFacilityRow(row, index) {
   return {
     id: index + 1,
     name: row['Nama'] || row['nama'] || '',
-    type: row['Tipe'] || row['Jenis'] || row['type'] || row['type'] || 'Fasilitas Umum',
+    type: row['Kategori'] || row['Tipe'] || row['Jenis'] || row['type'] || 'Fasilitas Umum',
     description: row['Deskripsi'] || row['deskripsi'] || '',
     address: row['Alamat'] || row['alamat'] || row['Address'] || row['address'] || '',
-    phone: String(row['Telepon'] || row['telepon'] || row['Phone'] || row['phone'] || ''),
+    phone: String(row['Telepon'] || row['telepon'] || row['WhatsApp'] || row['whatsapp'] || row['Phone'] || row['phone'] || ''),
     image: toDirectImageUrl(rawImage),
     gmaps: row['Gmaps'] || row['gmaps'] || null,
   };
+}
+
+function mapCultureRow(row, index) {
+  const rawImage = row['Foto'] || row['foto'] || null;
+
+  return {
+    id: index + 1,
+    name: row['Nama'] || row['nama'] || '',
+    type: row['Kategori'] || row['Tipe'] || row['Jenis'] || row['type'] || 'Kebudayaan',
+    description: row['Deskripsi'] || row['deskripsi'] || '',
+    address: row['Alamat'] || row['alamat'] || row['Address'] || row['address'] || '',
+    phone: String(row['Telepon'] || row['telepon'] || row['WhatsApp'] || row['whatsapp'] || row['Phone'] || row['phone'] || ''),
+    image: toDirectImageUrl(rawImage),
+    gmaps: row['Gmaps'] || row['gmaps'] || null,
+  };
+}
+
+/**
+ * Filter baris spreadsheet berdasarkan kolom "Section".
+ * Spreadsheet menggunakan satu tab untuk semua data,
+ * dibedakan oleh kolom Section: "Direktori UMKM", "Fasilitas Umum", "Kebudayaan dan Kesenian"
+ */
+function filterBySection(rows, sectionName) {
+  return rows.filter((row) => {
+    const section = (row['Section'] || row['section'] || '').trim().toLowerCase();
+    return section.includes(sectionName.toLowerCase());
+  });
 }
 
 /* ── Mapper: row → format statistik app ── */
@@ -229,20 +260,22 @@ export function SiteDataProvider({ children }) {
     // ── Inisialisasi: cek cache dulu ──
     // Jika ada cache (fresh atau stale), langsung pakai sebagai initial state
     // Ini membuat website terasa instan saat dibuka ulang
-    const cachedUmkm = getCached('umkm');
+    const cachedAll = getCached('allData');
     const cachedStats = getCached('stats');
-    const cachedFacilities = getCached('facilities');
 
     const initial = { ...siteConfig };
 
-    if (cachedUmkm?.data) {
-      initial.umkm = cachedUmkm.data.map(mapUmkmRow);
+    if (cachedAll?.data) {
+      const umkmRows = filterBySection(cachedAll.data, 'Direktori UMKM');
+      const facilityRows = filterBySection(cachedAll.data, 'Fasilitas Umum');
+      const cultureRows = filterBySection(cachedAll.data, 'Kebudayaan');
+
+      if (umkmRows.length > 0) initial.umkm = umkmRows.map(mapUmkmRow);
+      if (facilityRows.length > 0) initial.facilities = facilityRows.map(mapFacilityRow);
+      if (cultureRows.length > 0) initial.culture = cultureRows.map(mapCultureRow);
     }
     if (cachedStats?.data) {
       initial.stats = cachedStats.data.map(mapStatsRow);
-    }
-    if (cachedFacilities?.data) {
-      initial.facilities = cachedFacilities.data.map(mapFacilityRow);
     }
 
     return initial;
@@ -250,11 +283,10 @@ export function SiteDataProvider({ children }) {
 
   const [loading, setLoading] = useState(() => {
     // Hanya tampilkan loading jika TIDAK ada cache sama sekali
-    if (!API_CONFIG.umkm && !API_CONFIG.stats && !API_CONFIG.facilities) return false;
-    const cachedUmkm = getCached('umkm');
+    if (!API_CONFIG.umkm && !API_CONFIG.stats) return false;
+    const cachedAll = getCached('allData');
     const cachedStats = getCached('stats');
-    const cachedFacilities = getCached('facilities');
-    return !cachedUmkm && !cachedStats && !cachedFacilities;
+    return !cachedAll && !cachedStats;
   });
 
   const [error, setError] = useState(null);
@@ -272,10 +304,10 @@ export function SiteDataProvider({ children }) {
     fetchedRef.current = true;
 
     // Cek apakah semua cache masih fresh → skip fetch
-    const cachedUmkm = getCached('umkm');
+    const cachedAll = getCached('allData');
     const cachedStats = getCached('stats');
     const allFresh =
-      (!API_CONFIG.umkm || cachedUmkm?.fresh) &&
+      (!API_CONFIG.umkm || cachedAll?.fresh) &&
       (!API_CONFIG.stats || cachedStats?.fresh);
 
     if (allFresh) {
@@ -288,39 +320,49 @@ export function SiteDataProvider({ children }) {
     async function fetchAll() {
       try {
         // ── Fetch PARALEL dengan Promise.allSettled ──
-        // Lebih cepat karena semua request jalan bersamaan
-        const [umkmResult, statsResult, facilitiesResult] = await Promise.allSettled([
+        // Sheet "Potensi Krebet" berisi SEMUA data (UMKM, Fasilitas, Kebudayaan)
+        // dipisahkan oleh kolom "Section"
+        const [allDataResult, statsResult] = await Promise.allSettled([
           API_CONFIG.umkm ? fetchGoogleSheet(API_CONFIG.umkm) : Promise.resolve(null),
           API_CONFIG.stats ? fetchGoogleSheet(API_CONFIG.stats) : Promise.resolve(null),
-          API_CONFIG.facilities ? fetchGoogleSheet(API_CONFIG.facilities) : Promise.resolve(null),
         ]);
 
         if (cancelled) return;
 
         const updates = {};
 
-        // Proses hasil UMKM
-        if (umkmResult.status === 'fulfilled' && Array.isArray(umkmResult.value) && umkmResult.value.length > 0) {
-          setCache('umkm', umkmResult.value);
-          updates.umkm = umkmResult.value.map(mapUmkmRow);
-        } else if (umkmResult.status === 'rejected') {
-          console.warn('⚠️ Gagal fetch UMKM:', umkmResult.reason);
+        // Proses hasil dari sheet "Potensi Krebet" — filter berdasarkan Section
+        if (allDataResult.status === 'fulfilled' && Array.isArray(allDataResult.value) && allDataResult.value.length > 0) {
+          const allRows = allDataResult.value;
+          setCache('allData', allRows);
+
+          // Filter UMKM
+          const umkmRows = filterBySection(allRows, 'Direktori UMKM');
+          if (umkmRows.length > 0) {
+            updates.umkm = umkmRows.map(mapUmkmRow);
+          }
+
+          // Filter Fasilitas Umum
+          const facilityRows = filterBySection(allRows, 'Fasilitas Umum');
+          if (facilityRows.length > 0) {
+            updates.facilities = facilityRows.map(mapFacilityRow);
+          }
+
+          // Filter Kebudayaan
+          const cultureRows = filterBySection(allRows, 'Kebudayaan');
+          if (cultureRows.length > 0) {
+            updates.culture = cultureRows.map(mapCultureRow);
+          }
+        } else if (allDataResult.status === 'rejected') {
+          console.warn('⚠️ Gagal fetch data Potensi:', allDataResult.reason);
         }
 
-        // Proses hasil Statistik
+        // Proses hasil Statistik (sheet terpisah jika ada)
         if (statsResult.status === 'fulfilled' && Array.isArray(statsResult.value) && statsResult.value.length > 0) {
           setCache('stats', statsResult.value);
           updates.stats = statsResult.value.map(mapStatsRow);
         } else if (statsResult.status === 'rejected') {
           console.warn('⚠️ Gagal fetch Stats:', statsResult.reason);
-        }
-
-        // Proses hasil Fasilitas Umum
-        if (facilitiesResult.status === 'fulfilled' && Array.isArray(facilitiesResult.value) && facilitiesResult.value.length > 0) {
-          setCache('facilities', facilitiesResult.value);
-          updates.facilities = facilitiesResult.value.map(mapFacilityRow);
-        } else if (facilitiesResult.status === 'rejected') {
-          console.warn('⚠️ Gagal fetch Facilities:', facilitiesResult.reason);
         }
 
         if (Object.keys(updates).length > 0) {
@@ -339,6 +381,7 @@ export function SiteDataProvider({ children }) {
 
     return () => {
       cancelled = true;
+      fetchedRef.current = false; // Reset agar StrictMode re-mount bisa fetch
     };
   }, []);
 
